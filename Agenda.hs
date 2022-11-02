@@ -31,12 +31,9 @@ main = do
     -- putStrLn (show year)
 
     agendaData <- initAgenda
-    putStrLn (show agendaData)
+    -- putStrLn (show agendaData)
 
     agenda yearDaysOff agendaData
-
-
-
 
 
 getHour (h , _) = h
@@ -64,15 +61,15 @@ availableTime ((b,m,ds):agenda) yearInfo month day schedule
 
 -- ############################## AGENDA HANDLERS ##############################
 
---initDayList = [ (x, []) | x <- [1..31] ]
+initDayList = [ (x, [] :: [Scheduling]) | x <- [1..31] ]
 
-initAgenda = return [(False,i,[] :: Day) | i <- [1..12]]
+initAgenda = return [(False,i, initDayList) | i <- [1..12]]
 
 -- ############################## INSERT A SCHEDULE ##############################
 
 
 
--- ############################## READING THE YEAR DAYS OFF ##############################
+-- ############################ READING THE YEAR DAYS OFF ############################
 
 -- map read $ words string :: [Int] faz "1 2 3" virar [1,2,3]
 stringToList string = map read $ words string :: [Int]
