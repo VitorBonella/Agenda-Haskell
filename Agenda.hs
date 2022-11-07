@@ -16,15 +16,23 @@ type DayOff = [Bool]
 
 type Year = (Bool, [DayOff])
 
+
+trataOP op yearDaysOff agendaData
+    | op == 1 = readInsertSchedule yearDaysOff agendaData
+    | otherwise = agenda yearDaysOff agendaData
+
+
 agenda yearDaysOff agendaData = do
-    
+
+    putStrLn (show agendaData)
+
     showMenu
     op <- leOp
 
     if op == 0 then
         putStrLn "Saindo da Agenda"
     else
-        agenda yearDaysOff agendaData
+        trataOP op yearDaysOff agendaData
 
 main = do
     yearDaysOff <- readYear
@@ -61,11 +69,43 @@ availableTime ((b,m,ds):agenda) yearInfo month day schedule
 
 -- ############################## AGENDA HANDLERS ##############################
 
-initDayList = [ (x, [] :: [Scheduling]) | x <- [1..31] ]
+initDayList = [(x, [] :: [Scheduling]) | x <- [1..31]]
 
 initAgenda = return [(False,i, initDayList) | i <- [1..12]]
 
 -- ############################## INSERT A SCHEDULE ##############################
+
+
+insertScheduleDay (x, xs) d it du
+    | x == d = (x,xs ++ [(it,du)])
+    | otherwise = (x,xs)
+
+insertSchedule (b, i, ds) m d it du
+    | i == m = (b,i, [insertScheduleDay day d it du | day <- ds])
+    | otherwise = (b, i, ds)
+
+insertScheduleAux yearDaysOff agendaData m d it du = agenda yearDaysOff [ insertSchedule dm m d it du| dm <- agendaData]
+
+-- read Mês, Dia, Horário de início do compromisso, Duração do compromisso.
+readInsertSchedule yearDaysOff agendaData = do
+    -- Month
+    putStrLn "Mes:"
+    m <- getLine
+    -- Day 
+    putStrLn "Dia:"
+    d <- getLine
+    -- Schedule Initial Time
+    putStrLn "Horário de início:"
+    it <- getLine
+    -- Schedule Duration
+    putStrLn "Duração:"
+    dur <- getLine
+
+   
+    insertScheduleAux yearDaysOff agendaData (read m :: Int) (read d :: Int) (read it :: Int) (read dur :: Int)
+    
+
+-- ############################## VERIFY SCHEDULE ##############################
 
 
 
