@@ -18,7 +18,7 @@ type Year = (Bool, [DayOff])
 
 
 trataOP op yearDaysOff agendaData
-    | op == 1 = readInsertSchedule yearDaysOff agendaData
+    | op == 3 = readInsertSchedule yearDaysOff agendaData
     | otherwise = agenda yearDaysOff agendaData
 
 
@@ -48,8 +48,9 @@ getHour (h , _) = h
 getTime (_ , t) = t
 
 -- Verify wheter the requested time is free
-verifyAvailableSchedule ((h,t):ss) schedule
-    | h == (getHour schedule) = False
+verifyAvailableSchedule [] schedule = True 
+verifyAvailableSchedule ((h,t):ss) schedule 
+    | h == getHour schedule = False
     | null ss = True
     | otherwise = verifyAvailableSchedule ss schedule
 
@@ -60,7 +61,6 @@ verifyAvailableDay ((d,ss):ds) schedule day
     | otherwise = verifyAvailableDay ds schedule day
 
 -- Verify whether the schedule time is available, this funcition search first for the month in agenda
--- AvailableTime :: Agenda -> Year -> Day -> Month -> Scheduling -> Bool
 availableTime ((b,m,ds):agenda) yearInfo month day schedule 
     | m == month = verifyAvailableDay ds schedule day
     | null agenda = False
@@ -84,7 +84,9 @@ insertSchedule (b, i, ds) m d it du
     | i == m = (b,i, [insertScheduleDay day d it du | day <- ds])
     | otherwise = (b, i, ds)
 
-insertScheduleAux yearDaysOff agendaData m d it du = agenda yearDaysOff [ insertSchedule dm m d it du| dm <- agendaData]
+insertScheduleAux yearDaysOff agendaData m d it du 
+    | availableTime agendaData yearDaysOff m d (it,du) = agenda yearDaysOff [insertSchedule dm m d it du| dm <- agendaData]
+    | otherwise = agenda yearDaysOff agendaData
 
 -- read Mês, Dia, Horário de início do compromisso, Duração do compromisso.
 readInsertSchedule yearDaysOff agendaData = do
