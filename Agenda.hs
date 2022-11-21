@@ -1,24 +1,36 @@
 import Menu
 
--- https://gist.github.com/bfb/3855780
+type Schedule = (Int,Int,Int,Int)
 
-type Hour = Int
-type Time = Int
+getM (x,_,_,_) = x
+getD (_,x,_,_) = x
+getIT (_,_,x,_) = x
+getDU (_,_,_,x) = x
 
-type Scheduling = (Hour,Time)
 
-type Day = (Int, [Scheduling])
+lesserEqual schedule1 schedule2
+    | getM schedule1 < getM schedule2 = True
+    | getM schedule1 == getM schedule2 && getD schedule1 <= getD schedule2 = True
+    | getM schedule1 == getM schedule2 && getD schedule1 == getD schedule2 && getIT schedule1 <= getIT schedule2 = True
+    | otherwise = False
 
-type Month = (Bool, Int, [Day])
-type Agenda = [Month]
+greater schedule1 schedule2
+    | getM schedule1 > getM schedule2 = True
+    | getM schedule1 == getM schedule2 && getD schedule1 > getD schedule2 = True
+    | getM schedule1 == getM schedule2 && getD schedule1 == getD schedule2 && getIT schedule1 > getIT schedule2 = True
+    | otherwise = False
 
-type DayOff = [Bool]
-
-type Year = (Bool, [DayOff])
+quicksort [] = []  
+quicksort (x:xs) =   
+    let left = quicksort [a | a <- xs, lesserEqual a x]  
+        right = quicksort [a | a <- xs,greater a x]  
+    in  left ++ [x] ++ right  
 
 
 trataOP op yearDaysOff agendaData
+    | op == 1 =  agenda yearDaysOff agendaData
     | op == 3 = readInsertSchedule yearDaysOff agendaData
+    | op == 7 = readDeleteSchedule yearDaysOff agendaData
     | otherwise = agenda yearDaysOff agendaData
 
 
@@ -32,63 +44,52 @@ agenda yearDaysOff agendaData = do
     if op == 0 then
         putStrLn "Saindo da Agenda"
     else
-        trataOP op yearDaysOff agendaData
+        trataOP op yearDaysOff (quicksort agendaData)
+
 
 main = do
+    
     yearDaysOff <- readYear
-    -- putStrLn (show year)
+    -- putStrLn (show yearDaysOff)
 
     agendaData <- initAgenda
     -- putStrLn (show agendaData)
+    -- readCalendar agendaData yearDaysOff
 
     agenda yearDaysOff agendaData
 
-
-getHour (h , _) = h
-getTime (_ , t) = t
-
--- Verify wheter the requested time is free
-verifyAvailableSchedule [] schedule = True 
-verifyAvailableSchedule ((h,t):ss) schedule 
-    | h == getHour schedule = False
-    | null ss = True
-    | otherwise = verifyAvailableSchedule ss schedule
-
--- Verify wheter the day is util and find the requested day
-verifyAvailableDay ((d,ss):ds) schedule day
-    | d == day = verifyAvailableSchedule ss schedule
-    | null ds = False
-    | otherwise = verifyAvailableDay ds schedule day
-
--- Verify whether the schedule time is available, this funcition search first for the month in agenda
-availableTime ((b,m,ds):agenda) yearInfo month day schedule 
-    | m == month = verifyAvailableDay ds schedule day
-    | null agenda = False
-    | otherwise = availableTime agenda yearInfo month day schedule
+initAgenda = return ([] :: [Schedule])
 
 
--- ############################## AGENDA HANDLERS ##############################
+-- ############################ VERIFIERS ############################
 
-initDayList = [(x, [] :: [Scheduling]) | x <- [1..31]]
+getMonthDayList agendaData m d = [x | x <- agendaData, (getM x) == m && (getD x) == d]
 
-initAgenda = return [(False,i, initDayList) | i <- [1..12]]
+testT t
+    | t >= 12 = t + 2
+    | otherwise = t
 
--- ############################## INSERT A SCHEDULE ##############################
+getHourOccupied it du = [testT t | t <- [it..it+du]]
+
+createListOfOccupation agendaData m d = concat [getHourOccupied (getIT x) (getDU x)| x <- (getMonthDayList agendaData m d)]
 
 
-insertScheduleDay (x, xs) d it du
-    | x == d = (x,xs ++ [(it,du)])
-    | otherwise = (x,xs)
+verifyIT it
+    | it >= 8 && it < 12 || it >= 14 && it < 18 = True
+    | otherwise = False
 
-insertSchedule (b, i, ds) m d it du
-    | i == m = (b,i, [insertScheduleDay day d it du | day <- ds])
-    | otherwise = (b, i, ds)
+verifyAlreadyScheduled agendaData m d it = it `elem` (createListOfOccupation agendaData m d)
 
-insertScheduleAux yearDaysOff agendaData m d it du 
-    | availableTime agendaData yearDaysOff m d (it,du) = agenda yearDaysOff [insertSchedule dm m d it du| dm <- agendaData]
+
+dayOff yearDaysOff m d = ((snd yearDaysOff) !! m) !! d
+
+
+-- ############################ INSERT SCHEDULE ############################
+
+insertScheduleAux yearDaysOff agendaData m d it du
+    | verifyIT it && not (verifyAlreadyScheduled agendaData m d it) && not (dayOff yearDaysOff m d) = agenda yearDaysOff (agendaData ++ [(m,d,it,du)])
     | otherwise = agenda yearDaysOff agendaData
 
--- read Mês, Dia, Horário de início do compromisso, Duração do compromisso.
 readInsertSchedule yearDaysOff agendaData = do
     -- Month
     putStrLn "Mes:"
@@ -103,13 +104,25 @@ readInsertSchedule yearDaysOff agendaData = do
     putStrLn "Duração:"
     dur <- getLine
 
-   
     insertScheduleAux yearDaysOff agendaData (read m :: Int) (read d :: Int) (read it :: Int) (read dur :: Int)
-    
-
--- ############################## VERIFY SCHEDULE ##############################
 
 
+-- ############################ DELETE SCHEDULE ############################
+
+deleteSchedule yearDaysOff agendaData m d it = agenda yearDaysOff [x | x <- agendaData,not (((getM x) == m) && ((getD x) == d) && ((getIT x) == it))]
+
+readDeleteSchedule yearDaysOff agendaData = do
+    -- Month
+    putStrLn "Mes:"
+    m <- getLine
+    -- Day 
+    putStrLn "Dia:"
+    d <- getLine
+    -- Schedule Initial Time
+    putStrLn "Horário de início:"
+    it <- getLine
+
+    deleteSchedule yearDaysOff agendaData (read m :: Int) (read d :: Int) (read it :: Int)
 
 -- ############################ READING THE YEAR DAYS OFF ############################
 
@@ -122,7 +135,7 @@ testPosition d (x:ds)
     | (null ds) = True
     | otherwise = testPosition d ds 
 
-convertToDayOff string = [ testPosition d (stringToList string) | d <- [1..31]]
+convertToDayOff string = [testPosition d (stringToList string) | d <- [1..31]]
 
 -- True = Util Day , False = Holiday or weekend
 readDayOffs ds = [convertToDayOff x| x <- ds]
@@ -133,4 +146,44 @@ divideYearInput (x:xs) = (x,readDayOffs xs)
 readYear = do 
     content <- readFile "calendario.txt"
     --putStrLn (show (lines (content)))
-    return (divideYearInput (lines (content)))   
+    return (divideYearInput (lines (content)))
+
+-- ############################ READING THE YEAR ############################
+
+{-
+addSchedule _ _ [] = []
+addSchedule month day ((it,dur):xs) = [(month,day,it,dur)] + addSchedule month day xs
+
+readDay _ _ [] = []
+readDay month day (x:xs) = (addSchedule month day (read x :: [(Integer,Integer)])) ++ (readDays month xs)
+
+readDays _ [] = [] 
+readDays month (x:xs) = readDay month (read x :: Int) xs
+
+readMonth (x:xs) = readDays (read x :: Int) xs
+
+readAgenda [] = []
+readAgenda (x:xs) = (readMonth x) ++ (readAgenda xs) 
+-}
+
+
+readMonths [] = []
+readMonths lines = [takeWhile (/="") lines] ++ (readMonths (tail(dropWhile (/="") lines)))
+        
+    
+readCalendar agendaData yearDaysOff = do
+    content <- readFile "agenda.txt"
+    linhas <- lines (content)
+
+    putStrLn (show (linhas))
+    
+    putStrLn (show (takeWhile (/="") (read linhas :: [String])))
+    --months <- readMonths (lines (content))
+
+    --putStrLn (show (months))
+
+    -- putStrLn (show (lines (readAgenda months)))
+
+
+
+-- ############################ WRITE AGENDA ############################
