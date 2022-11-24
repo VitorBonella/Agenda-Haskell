@@ -1,6 +1,5 @@
 import Menu
-
-type Schedule = (Int,Int,Int,Int)
+import System.Directory
 
 getM (x,_,_,_) = x
 getD (_,x,_,_) = x
@@ -10,7 +9,7 @@ getDU (_,_,_,x) = x
 
 lesserEqual schedule1 schedule2
     | getM schedule1 < getM schedule2 = True
-    | getM schedule1 == getM schedule2 && getD schedule1 <= getD schedule2 = True
+    | getM schedule1 == getM schedule2 && getD schedule1 < getD schedule2 = True
     | getM schedule1 == getM schedule2 && getD schedule1 == getD schedule2 && getIT schedule1 <= getIT schedule2 = True
     | otherwise = False
 
@@ -52,13 +51,16 @@ main = do
     yearDaysOff <- readYear
     -- putStrLn (show yearDaysOff)
 
-    agendaData <- initAgenda
+    agendaData <- readCalendar
+    -- agendaDataValid <- initAgenda
     -- putStrLn (show agendaData)
-    -- readCalendar agendaData yearDaysOff
-
+    
     agenda yearDaysOff agendaData
 
-initAgenda = return ([] :: [Schedule])
+
+
+--insertOnlyValid
+initAgenda = return ([] :: [(Int,Int,Int,Int)])
 
 
 -- ############################ VERIFIERS ############################
@@ -150,12 +152,12 @@ readYear = do
 
 -- ############################ READING THE YEAR ############################
 
-{-
+
 addSchedule _ _ [] = []
-addSchedule month day ((it,dur):xs) = [(month,day,it,dur)] + addSchedule month day xs
+addSchedule month day ((it,dur):xs) = [(month,day,it,dur)] ++ addSchedule month day xs
 
 readDay _ _ [] = []
-readDay month day (x:xs) = (addSchedule month day (read x :: [(Integer,Integer)])) ++ (readDays month xs)
+readDay month day (x:xs) = (addSchedule month day (read x :: [(Int,Int)])) ++ (readDays month xs)
 
 readDays _ [] = [] 
 readDays month (x:xs) = readDay month (read x :: Int) xs
@@ -164,25 +166,32 @@ readMonth (x:xs) = readDays (read x :: Int) xs
 
 readAgenda [] = []
 readAgenda (x:xs) = (readMonth x) ++ (readAgenda xs) 
--}
 
 
 readMonths [] = []
-readMonths lines = [takeWhile (/="") lines] ++ (readMonths (tail(dropWhile (/="") lines)))
+readMonths lines = [takeWhile (/="") lines] ++ (readMonths (dropWhile (=="") (dropWhile (/="") lines)))
         
     
-readCalendar agendaData yearDaysOff = do
-    content <- readFile "agenda.txt"
-    linhas <- lines (content)
+readCalendar = do
 
-    putStrLn (show (linhas))
-    
-    putStrLn (show (takeWhile (/="") (read linhas :: [String])))
-    --months <- readMonths (lines (content))
+    b <- doesFileExist "agenda.txt"
 
-    --putStrLn (show (months))
+    if b then do
+        content <- readFile "agenda.txt"
+        
+        -- linhas <- lines (content)
 
-    -- putStrLn (show (lines (readAgenda months)))
+        -- putStrLn (show (linhas))
+        
+        -- putStrLn (show (takeWhile (/="") (lines (content))))
+
+        -- putStrLn (show (readMonths (lines (content))))
+
+        -- putStrLn (show (readAgenda (readMonths (lines (content)))))
+        return (readAgenda (readMonths (lines (content))))
+    else do
+        writeFile "agenda.txt" ""
+        initAgenda
 
 
 
