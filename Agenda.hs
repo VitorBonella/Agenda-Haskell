@@ -27,9 +27,12 @@ quicksort (x:xs) =
 
 
 trataOP op yearDaysOff agendaData
-    | op == 1 =  agenda yearDaysOff agendaData
+    | op == 1 =  main
+    | op == 2 = 
     | op == 3 = readInsertSchedule yearDaysOff agendaData
     | op == 7 = readDeleteSchedule yearDaysOff agendaData
+    | op == 8 = readReSchedule yearDaysOff agendaData 
+    | op == 9 = writeCalendar agendaData yearDaysOff
     | otherwise = agenda yearDaysOff agendaData
 
 
@@ -75,21 +78,21 @@ getHourOccupied it du = [testT t | t <- [it..it+du]]
 
 createListOfOccupation agendaData m d = concat [getHourOccupied (getIT x) (getDU x)| x <- (getMonthDayList agendaData m d)]
 
-
 verifyIT it
     | it >= 8 && it < 12 || it >= 14 && it < 18 = True
     | otherwise = False
 
 verifyAlreadyScheduled agendaData m d it = it `elem` (createListOfOccupation agendaData m d)
 
-
-dayOff yearDaysOff m d = ((snd yearDaysOff) !! m) !! d
+dayOff yearDaysOff m d 
+    | m <=12 && d <= 31 = ((snd yearDaysOff) !! (m-1)) !! (d-1)
+    | otherwise = False
 
 
 -- ############################ INSERT SCHEDULE ############################
 
 insertScheduleAux yearDaysOff agendaData m d it du
-    | verifyIT it && not (verifyAlreadyScheduled agendaData m d it) && not (dayOff yearDaysOff m d) = agenda yearDaysOff (agendaData ++ [(m,d,it,du)])
+    | verifyIT it && not (verifyAlreadyScheduled agendaData m d it) && (dayOff yearDaysOff m d) = agenda yearDaysOff (agendaData ++ [(m,d,it,du)])
     | otherwise = agenda yearDaysOff agendaData
 
 readInsertSchedule yearDaysOff agendaData = do
@@ -108,6 +111,40 @@ readInsertSchedule yearDaysOff agendaData = do
 
     insertScheduleAux yearDaysOff agendaData (read m :: Int) (read d :: Int) (read it :: Int) (read dur :: Int)
 
+-- ############################ RESCHEDULE ############################
+
+
+reSchedule yearDaysOff agendaData mo dol ito m d it du
+    | verifyIT it  && not (verifyAlreadyScheduled agendaData m d it) && (dayOff yearDaysOff m d) = deleteSchedule yearDaysOff (agendaData ++ [(m,d,it,du)]) mo dol ito 
+    | otherwise = agenda yearDaysOff agendaData
+
+readReSchedule yearDaysOff agendaData = do
+
+     -- Month
+    putStrLn "Antigo Mes:"
+    mo <- getLine
+    -- Day 
+    putStrLn "Antigo Dia:"
+    dol <- getLine
+    -- Schedule Initial Time
+    putStrLn "Antigo Horário de início:"
+    ito <- getLine
+
+
+     -- Month
+    putStrLn "Novo Mes:"
+    m <- getLine
+    -- Day 
+    putStrLn "Novo Dia:"
+    d <- getLine
+    -- Schedule Initial Time
+    putStrLn "Novo Horário de início:"
+    it <- getLine
+    -- Schedule Duration
+    putStrLn "Novo Duração:"
+    dur <- getLine
+
+    reSchedule yearDaysOff agendaData (read mo :: Int) (read dol :: Int) (read ito :: Int) (read m :: Int) (read d :: Int) (read it :: Int) (read dur :: Int)
 
 -- ############################ DELETE SCHEDULE ############################
 
@@ -196,3 +233,32 @@ readCalendar = do
 
 
 -- ############################ WRITE AGENDA ############################
+
+takeOnlyTheDay agendaData day = [x | x <- agendaData, (getD x) == day]
+
+divedeInDays agendaData 32 = []
+divedeInDays monthData day = [takeOnlyTheDay monthData day] ++ (divedeInDays monthData (day+1))
+
+takeOnlyTheMonth agendaData month = [x | x <- agendaData, (getM x) == month]
+
+divedeInMonths agendaData 13 = []
+divedeInMonths agendaData month = [divedeInDays (takeOnlyTheMonth agendaData month) 1] ++ (divedeInMonths agendaData (month+1))
+
+
+
+
+dayString day= (show [(it,du) | (_,_,it,du) <- day])
+
+makeAgendaStringMonth month m = [show m] ++ concat [[show i,dayString d]| (i,d) <- zip [1..] month, not (null d)] ++ ["\n"]
+
+makeAgendaString agendaData =  [makeAgendaStringMonth m i | (i,m) <- zip [1..] agendaData]
+
+onlyMoreThanTwoElements dados = [d | d <- dados, (length d) > 3]
+
+writeCalendar agendaData yearDaysOff = do
+    
+    -- putStrLn (show (makeAgendaString (divedeInMonths agendaData 1)))
+
+    writeFile "agendaT.txt" $ unlines (concat (onlyMoreThanTwoElements (makeAgendaString (divedeInMonths agendaData 1))))
+    
+    agenda yearDaysOff agendaData
