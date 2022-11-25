@@ -79,11 +79,17 @@ getHourOccupied it du = [testT it t | t <- [it..(it+du-1)]]
 
 createListOfOccupation agendaData m d = concat [getHourOccupied (getIT x) (getDU x)| x <- (getMonthDayList agendaData m d)]
 
-verifyIT it
+verifyIT it du
+    | it + du + 2 > 18 && it < 12 = False
+    | it + du > 18 && it >=14 = False
     | it >= 8 && it < 12 || it >= 14 && it < 18 = True
     | otherwise = False
 
-verifyAlreadyScheduled agendaData m d it = it `elem` (createListOfOccupation agendaData m d)
+
+intersectList xs ys = [y | y <- ys, y `elem` xs]
+
+-- verifyAlreadyScheduled agendaData m d it = it `elem` (createListOfOccupation agendaData m d)
+verifyAlreadyScheduled agendaData m d it du = not (null (intersectList (getHourOccupied it du) (createListOfOccupation agendaData m d))) || it `elem` (createListOfOccupation agendaData m d)
 
 dayOff yearDaysOff m d 
     | m <=12 && d <= 31 = ((snd yearDaysOff) !! (m-1)) !! (d-1)
@@ -91,7 +97,7 @@ dayOff yearDaysOff m d
 
 -- ############################ VERIFY SCHEDULE ############################
 
-returnBoolSchedule yearDaysOff agendaData m d it du = return (verifyIT it && not (verifyAlreadyScheduled agendaData m d it) && (dayOff yearDaysOff m d))
+returnBoolSchedule yearDaysOff agendaData m d it du = return (verifyIT it du && not (verifyAlreadyScheduled agendaData m d it du) && (dayOff yearDaysOff m d))
 
 verifySchedule yearDaysOff agendaData = do
     -- Month
@@ -119,7 +125,7 @@ verifySchedule yearDaysOff agendaData = do
 -- ############################ INSERT SCHEDULE ############################
 
 insertScheduleAux yearDaysOff agendaData m d it du
-    | verifyIT it && not (verifyAlreadyScheduled agendaData m d it) && (dayOff yearDaysOff m d) = agenda yearDaysOff (agendaData ++ [(m,d,it,du)])
+    | verifyIT it du && not (verifyAlreadyScheduled agendaData m d it du) && (dayOff yearDaysOff m d) = agenda yearDaysOff (agendaData ++ [(m,d,it,du)])
     | otherwise = agenda yearDaysOff agendaData
 
 readInsertSchedule yearDaysOff agendaData = do
@@ -142,7 +148,7 @@ readInsertSchedule yearDaysOff agendaData = do
 
 
 reSchedule yearDaysOff agendaData mo dol ito m d it du
-    | verifyIT it  && not (verifyAlreadyScheduled agendaData m d it) && (dayOff yearDaysOff m d) = deleteSchedule yearDaysOff (agendaData ++ [(m,d,it,du)]) mo dol ito 
+    | verifyIT it du && not (verifyAlreadyScheduled agendaData m d it du) && (dayOff yearDaysOff m d) = deleteSchedule yearDaysOff (agendaData ++ [(m,d,it,du)]) mo dol ito 
     | otherwise = agenda yearDaysOff agendaData
 
 readReSchedule yearDaysOff agendaData = do
@@ -197,7 +203,7 @@ getMinValid yearDaysOff agendaData 12 31 18 dur = return (30,40,50,60)
 getMinValid yearDaysOff agendaData m 31 18 dur = getMinValid yearDaysOff agendaData (m+1) 1 8 dur
 getMinValid yearDaysOff agendaData m d 18 dur = getMinValid yearDaysOff agendaData m (d+1) 8 dur
 getMinValid yearDaysOff agendaData m d it dur
-    | (verifyIT it && not (verifyAlreadyScheduled agendaData m d it) && (dayOff yearDaysOff m d)) = return (m,d,it,dur)
+    | (verifyIT it dur && not (verifyAlreadyScheduled agendaData m d it dur) && (dayOff yearDaysOff m d)) = return (m,d,it,dur)
     | otherwise = getMinValid yearDaysOff agendaData m d (it+1) dur
 
 readInsertMinSchedule yearDaysOff agendaData = do
@@ -315,6 +321,6 @@ writeCalendar agendaData yearDaysOff = do
     
     -- putStrLn (show (makeAgendaString (divedeInMonths agendaData 1)))
 
-    writeFile "agendaT.txt" $ unlines (concat (onlyMoreThanTwoElements (makeAgendaString (divedeInMonths agendaData 1))))
+    writeFile "agenda.txt" $ unlines (concat (onlyMoreThanTwoElements (makeAgendaString (divedeInMonths agendaData 1))))
     
     agenda yearDaysOff agendaData
