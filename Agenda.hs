@@ -28,8 +28,9 @@ quicksort (x:xs) =
 
 trataOP op yearDaysOff agendaData
     | op == 1 =  main
-    | op == 2 = 
+    | op == 2 = verifySchedule yearDaysOff agendaData
     | op == 3 = readInsertSchedule yearDaysOff agendaData
+    | op == 4 = readInsertMinSchedule yearDaysOff agendaData
     | op == 7 = readDeleteSchedule yearDaysOff agendaData
     | op == 8 = readReSchedule yearDaysOff agendaData 
     | op == 9 = writeCalendar agendaData yearDaysOff
@@ -70,11 +71,11 @@ initAgenda = return ([] :: [(Int,Int,Int,Int)])
 
 getMonthDayList agendaData m d = [x | x <- agendaData, (getM x) == m && (getD x) == d]
 
-testT t
-    | t >= 12 = t + 2
+testT it t
+    | it < 12 && t >= 12 = t + 2
     | otherwise = t
 
-getHourOccupied it du = [testT t | t <- [it..it+du]]
+getHourOccupied it du = [testT it t | t <- [it..(it+du-1)]]
 
 createListOfOccupation agendaData m d = concat [getHourOccupied (getIT x) (getDU x)| x <- (getMonthDayList agendaData m d)]
 
@@ -88,6 +89,32 @@ dayOff yearDaysOff m d
     | m <=12 && d <= 31 = ((snd yearDaysOff) !! (m-1)) !! (d-1)
     | otherwise = False
 
+-- ############################ VERIFY SCHEDULE ############################
+
+returnBoolSchedule yearDaysOff agendaData m d it du = return (verifyIT it && not (verifyAlreadyScheduled agendaData m d it) && (dayOff yearDaysOff m d))
+
+verifySchedule yearDaysOff agendaData = do
+    -- Month
+    putStrLn "Mes:"
+    m <- getLine
+    -- Day 
+    putStrLn "Dia:"
+    d <- getLine
+    -- Schedule Initial Time
+    putStrLn "Horário de início:"
+    it <- getLine
+    -- Schedule Duration
+    putStrLn "Duração:"
+    dur <- getLine
+
+    valid <- returnBoolSchedule yearDaysOff agendaData (read m :: Int) (read d :: Int) (read it :: Int) (read dur :: Int)
+
+    if valid then
+        putStrLn "Compromisso pode ser marcado"
+    else
+        putStrLn "Compromisso não pode ser marcado"
+
+    agenda yearDaysOff agendaData
 
 -- ############################ INSERT SCHEDULE ############################
 
@@ -141,7 +168,7 @@ readReSchedule yearDaysOff agendaData = do
     putStrLn "Novo Horário de início:"
     it <- getLine
     -- Schedule Duration
-    putStrLn "Novo Duração:"
+    putStrLn "Nova Duração:"
     dur <- getLine
 
     reSchedule yearDaysOff agendaData (read mo :: Int) (read dol :: Int) (read ito :: Int) (read m :: Int) (read d :: Int) (read it :: Int) (read dur :: Int)
@@ -162,6 +189,35 @@ readDeleteSchedule yearDaysOff agendaData = do
     it <- getLine
 
     deleteSchedule yearDaysOff agendaData (read m :: Int) (read d :: Int) (read it :: Int)
+
+
+-- ############################ MINIMUN SCHEDULE ############################
+
+getMinValid yearDaysOff agendaData 12 31 18 dur = return (30,40,50,60)
+getMinValid yearDaysOff agendaData m 31 18 dur = getMinValid yearDaysOff agendaData (m+1) 1 8 dur
+getMinValid yearDaysOff agendaData m d 18 dur = getMinValid yearDaysOff agendaData m (d+1) 8 dur
+getMinValid yearDaysOff agendaData m d it dur
+    | (verifyIT it && not (verifyAlreadyScheduled agendaData m d it) && (dayOff yearDaysOff m d)) = return (m,d,it,dur)
+    | otherwise = getMinValid yearDaysOff agendaData m d (it+1) dur
+
+readInsertMinSchedule yearDaysOff agendaData = do
+    -- Month
+    putStrLn "Mes:"
+    m <- getLine
+    -- Day 
+    putStrLn "Dia:"
+    d <- getLine
+    -- Schedule Duration
+    putStrLn "Duração:"
+    dur <- getLine
+
+    schedule <- getMinValid yearDaysOff agendaData (read m :: Int) (read d :: Int) 8 (read dur :: Int)
+
+    insertScheduleAux yearDaysOff agendaData (getM schedule) (getD schedule) (getIT schedule) (getDU schedule)
+
+-- ############################ MINIMUN INTERVAL SCHEDULE ############################
+
+-- ############################ MAX INTERVAL SCHEDULE ############################
 
 -- ############################ READING THE YEAR DAYS OFF ############################
 

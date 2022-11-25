@@ -8,7 +8,7 @@ leOp = do
 showMenu = do  
     putStrLn "0 - Sair OK"
     putStrLn "1 - Recuperar agenda OK"
-    putStrLn "2 - Verificar disponibilidade de horário"
+    putStrLn "2 - Verificar disponibilidade de horário OK"
     putStrLn "3 - Inserir compromisso no horário OK"
     putStrLn "4 - Inserir compromisso mais breve"
     putStrLn "5 - Inserir compromisso no intervalo mínimo"
