@@ -31,6 +31,8 @@ trataOP op yearDaysOff agendaData
     | op == 2 = verifySchedule yearDaysOff agendaData
     | op == 3 = readInsertSchedule yearDaysOff agendaData
     | op == 4 = readInsertMinSchedule yearDaysOff agendaData
+    | op == 5 = readInsertMinIntervalSchedule yearDaysOff agendaData
+-- | op == 6 = readInsertMaxIntervalSchedule yearDaysOff agendaData
     | op == 7 = readDeleteSchedule yearDaysOff agendaData
     | op == 8 = readReSchedule yearDaysOff agendaData 
     | op == 9 = writeCalendar agendaData yearDaysOff
@@ -95,9 +97,25 @@ dayOff yearDaysOff m d
     | m <=12 && d <= 31 = ((snd yearDaysOff) !! (m-1)) !! (d-1)
     | otherwise = False
 
+verifyMonthDay m d yearDaysOff
+    | m == 1 && d <= 31 = True
+    | m == 2 && d <= 29 && ((fst yearDaysOff) == "True") = True
+    | m == 2 && d <= 28 = True
+    | m == 3 && d <= 31 = True
+    | m == 4 && d <= 30 = True
+    | m == 5 && d <= 31 = True
+    | m == 6 && d <= 30 = True
+    | m == 7 && d <= 31 = True
+    | m == 8 && d <= 31 = True
+    | m == 9 && d <= 30 = True
+    | m == 10 && d <= 31 = True
+    | m == 11 && d <= 30 = True
+    | m == 12 && d <= 31 = True
+    | otherwise = False
+
 -- ############################ VERIFY SCHEDULE ############################
 
-returnBoolSchedule yearDaysOff agendaData m d it du = return (verifyIT it du && not (verifyAlreadyScheduled agendaData m d it du) && (dayOff yearDaysOff m d))
+returnBoolSchedule yearDaysOff agendaData m d it du = return (verifyIT it du && not (verifyAlreadyScheduled agendaData m d it du) && (dayOff yearDaysOff m d) && (verifyMonthDay m d yearDaysOff))
 
 verifySchedule yearDaysOff agendaData = do
     -- Month
@@ -125,7 +143,7 @@ verifySchedule yearDaysOff agendaData = do
 -- ############################ INSERT SCHEDULE ############################
 
 insertScheduleAux yearDaysOff agendaData m d it du
-    | verifyIT it du && not (verifyAlreadyScheduled agendaData m d it du) && (dayOff yearDaysOff m d) = agenda yearDaysOff (agendaData ++ [(m,d,it,du)])
+    | verifyIT it du && not (verifyAlreadyScheduled agendaData m d it du) && (dayOff yearDaysOff m d) && (verifyMonthDay m d yearDaysOff) = agenda yearDaysOff (agendaData ++ [(m,d,it,du)])
     | otherwise = agenda yearDaysOff agendaData
 
 readInsertSchedule yearDaysOff agendaData = do
@@ -148,7 +166,7 @@ readInsertSchedule yearDaysOff agendaData = do
 
 
 reSchedule yearDaysOff agendaData mo dol ito m d it du
-    | verifyIT it du && not (verifyAlreadyScheduled agendaData m d it du) && (dayOff yearDaysOff m d) = deleteSchedule yearDaysOff (agendaData ++ [(m,d,it,du)]) mo dol ito 
+    | verifyIT it du && not (verifyAlreadyScheduled agendaData m d it du) && (dayOff yearDaysOff m d) && (verifyMonthDay m d yearDaysOff) = deleteSchedule yearDaysOff (agendaData ++ [(m,d,it,du)]) mo dol ito 
     | otherwise = agenda yearDaysOff agendaData
 
 readReSchedule yearDaysOff agendaData = do
@@ -199,11 +217,22 @@ readDeleteSchedule yearDaysOff agendaData = do
 
 -- ############################ MINIMUN SCHEDULE ############################
 
-getMinValid yearDaysOff agendaData 12 31 18 dur = return (30,40,50,60)
-getMinValid yearDaysOff agendaData m 31 18 dur = getMinValid yearDaysOff agendaData (m+1) 1 8 dur
+
+getMinValid yearDaysOff agendaData 1 31 18 dur = getMinValid yearDaysOff agendaData (1+1) 1 8 dur
+getMinValid yearDaysOff agendaData 2 28 18 dur = getMinValid yearDaysOff agendaData (2+1) 1 8 dur
+getMinValid yearDaysOff agendaData 3 31 18 dur = getMinValid yearDaysOff agendaData (3+1) 1 8 dur
+getMinValid yearDaysOff agendaData 4 30 18 dur = getMinValid yearDaysOff agendaData (4+1) 1 8 dur
+getMinValid yearDaysOff agendaData 5 31 18 dur = getMinValid yearDaysOff agendaData (5+1) 1 8 dur
+getMinValid yearDaysOff agendaData 6 30 18 dur = getMinValid yearDaysOff agendaData (6+1) 1 8 dur
+getMinValid yearDaysOff agendaData 7 31 18 dur = getMinValid yearDaysOff agendaData (7+1) 1 8 dur
+getMinValid yearDaysOff agendaData 8 31 18 dur = getMinValid yearDaysOff agendaData (8+1) 1 8 dur
+getMinValid yearDaysOff agendaData 9 30 18 dur = getMinValid yearDaysOff agendaData (9+1) 1 8 dur
+getMinValid yearDaysOff agendaData 10 31 18 dur = getMinValid yearDaysOff agendaData (10+1) 1 8 dur
+getMinValid yearDaysOff agendaData 11 30 18 dur = getMinValid yearDaysOff agendaData (11+1) 1 8 dur
+getMinValid yearDaysOff agendaData 12 31 18 dur = return (100,40,50,60)
 getMinValid yearDaysOff agendaData m d 18 dur = getMinValid yearDaysOff agendaData m (d+1) 8 dur
 getMinValid yearDaysOff agendaData m d it dur
-    | (verifyIT it dur && not (verifyAlreadyScheduled agendaData m d it dur) && (dayOff yearDaysOff m d)) = return (m,d,it,dur)
+    | (verifyIT it dur && not (verifyAlreadyScheduled agendaData m d it dur) && (dayOff yearDaysOff m d)) && (verifyMonthDay m d yearDaysOff) = return (m,d,it,dur)
     | otherwise = getMinValid yearDaysOff agendaData m d (it+1) dur
 
 readInsertMinSchedule yearDaysOff agendaData = do
@@ -219,11 +248,56 @@ readInsertMinSchedule yearDaysOff agendaData = do
 
     schedule <- getMinValid yearDaysOff agendaData (read m :: Int) (read d :: Int) 8 (read dur :: Int)
 
-    insertScheduleAux yearDaysOff agendaData (getM schedule) (getD schedule) (getIT schedule) (getDU schedule)
+    if (getM schedule) == 100 then
+        agenda yearDaysOff agendaData
+    else
+        insertScheduleAux yearDaysOff agendaData (getM schedule) (getD schedule) (getIT schedule) (getDU schedule)
 
 -- ############################ MINIMUN INTERVAL SCHEDULE ############################
 
+
+hourDistance it1 du1 it2 du2
+    | it2 > 12 && it1 < 12 = it2 - (it1+du1) - 2
+    | it1 > 12 && it2 < 12 = (18 - (it1+du1)) + (it2 - 8)
+    | otherwise = it2 - (it1+du1)
+
+daysDistance yearDaysOff m d1 d2 = (length [x | x <- [d1+1..d2],(dayOff yearDaysOff m x)]) * 8
+
+distanceBetweenSchedule yearDaysOff (m1,d1,it1,du1) (m2,d2,it2,du2) dist
+    | m1 == m2 && d1 == d2 = (dist + (hourDistance it1 du1 it2 du2))
+    | m1 == m2 = (dist + (hourDistance it1 du1 it2 du2) + (daysDistance yearDaysOff m1 d1 d2))
+    | otherwise = dist
+
+
+pairs [] = []
+pairs (x:[]) = []
+pairs (x:y:zs) = (x, y) : pairs (y : zs)
+
+allIntervals agendaData yearDaysOff = [distanceBetweenSchedule yearDaysOff s1 s2 0 | (s1,s2) <- (pairs agendaData)]
+
+readInsertMinIntervalSchedule yearDaysOff agendaData = do
+    {-
+    -- Month
+    putStrLn "Mes:"
+    m <- getLine
+    -- Day 
+    putStrLn "Dia:"
+    d <- getLine
+    -- Schedule Duration
+    putStrLn "Duração:"
+    dur <- getLine
+    -- Max Days
+    putStrLn "Prazo em dias de busca:"
+    max_days <- getLine
+    -}
+    putStrLn (show (allIntervals agendaData yearDaysOff))
+    agenda yearDaysOff agendaData
+
+
 -- ############################ MAX INTERVAL SCHEDULE ############################
+
+-- readInsertMaxIntervalSchedule yearDaysOff agendaData
+
 
 -- ############################ READING THE YEAR DAYS OFF ############################
 
@@ -305,8 +379,6 @@ takeOnlyTheMonth agendaData month = [x | x <- agendaData, (getM x) == month]
 
 divedeInMonths agendaData 13 = []
 divedeInMonths agendaData month = [divedeInDays (takeOnlyTheMonth agendaData month) 1] ++ (divedeInMonths agendaData (month+1))
-
-
 
 
 dayString day= (show [(it,du) | (_,_,it,du) <- day])
