@@ -43,7 +43,7 @@ trataOP op yearDaysOff agendaData
 
 agenda yearDaysOff agendaData = do
 
-    putStrLn (show agendaData)
+    -- putStrLn (show agendaData)
 
     showMenu
     op <- leOp
@@ -67,7 +67,6 @@ main = do
 
 
 
---insertOnlyValid
 initAgenda = return ([] :: [(Int,Int,Int,Int)])
 
 
