@@ -1,5 +1,7 @@
 import Menu
 import System.Directory
+import Data.List
+import Data.Ord
 
 getM (x,_,_,_) = x
 getD (_,x,_,_) = x
@@ -32,7 +34,7 @@ trataOP op yearDaysOff agendaData
     | op == 3 = readInsertSchedule yearDaysOff agendaData
     | op == 4 = readInsertMinSchedule yearDaysOff agendaData
     | op == 5 = readInsertMinIntervalSchedule yearDaysOff agendaData
--- | op == 6 = readInsertMaxIntervalSchedule yearDaysOff agendaData
+    | op == 6 = readInsertMaxIntervalSchedule yearDaysOff agendaData
     | op == 7 = readDeleteSchedule yearDaysOff agendaData
     | op == 8 = readReSchedule yearDaysOff agendaData 
     | op == 9 = writeCalendar agendaData yearDaysOff
@@ -275,8 +277,20 @@ pairs (x:y:zs) = (x, y) : pairs (y : zs)
 
 allIntervals agendaData yearDaysOff = [distanceBetweenSchedule yearDaysOff s1 s2 0 | (s1,s2) <- (pairs agendaData)]
 
+verifyMonthDayAux m d yearDaysOff = return (verifyMonthDay m d yearDaysOff)
+
+selectMonthAndDays m d max_days agendaData = [x | x <- agendaData, (getM x) == m && (getD x) <= d+max_days]
+
+getTheMinimumIndex [] dur = []
+getTheMinimumIndex xs dur = ([(i,d) | (i,d) <- zip [0..] xs, d >= dur])
+
+
+returnMinIndex xs
+    | (null xs) = return (-1,-1)
+    | otherwise = return (minimumBy (comparing snd) xs)
+
 readInsertMinIntervalSchedule yearDaysOff agendaData = do
-    {-
+    
     -- Month
     putStrLn "Mes:"
     m <- getLine
@@ -289,14 +303,74 @@ readInsertMinIntervalSchedule yearDaysOff agendaData = do
     -- Max Days
     putStrLn "Prazo em dias de busca:"
     max_days <- getLine
-    -}
-    putStrLn (show (allIntervals agendaData yearDaysOff))
-    agenda yearDaysOff agendaData
+    
+
+    overTheMonth <- verifyMonthDayAux (read m :: Int) ((read d :: Int)+(read max_days :: Int)) yearDaysOff
+
+    if not (overTheMonth) then do
+        putStrLn "Busca de intervalo ultrapassa um mês"
+        agenda yearDaysOff agendaData
+    else do
+        minInterval <- returnMinIndex ((getTheMinimumIndex (allIntervals (selectMonthAndDays (read m :: Int) (read d :: Int) (read max_days :: Int) agendaData) yearDaysOff) (read dur :: Int)))
+        
+        -- putStrLn (show minInterval)
+
+        if (fst minInterval) == -1 then
+            agenda yearDaysOff agendaData
+        else do
+            previousSchedule <- return ((selectMonthAndDays (read m :: Int) (read d :: Int) (read max_days :: Int) agendaData) !! (fst minInterval))
+
+            putStrLn (show previousSchedule)
+
+            schedule <- getMinValid yearDaysOff agendaData (getM previousSchedule) (getD previousSchedule) (getIT previousSchedule) (read dur :: Int)
+            
+            insertScheduleAux yearDaysOff agendaData (getM schedule) (getD schedule) (getIT schedule) (getDU schedule)
+
 
 
 -- ############################ MAX INTERVAL SCHEDULE ############################
 
--- readInsertMaxIntervalSchedule yearDaysOff agendaData
+
+returnMaxIndex xs
+    | (null xs) = return (-1,-1)
+    | otherwise = return (maximumBy (comparing snd) xs)
+
+readInsertMaxIntervalSchedule yearDaysOff agendaData = do
+    
+    -- Month
+    putStrLn "Mes:"
+    m <- getLine
+    -- Day 
+    putStrLn "Dia:"
+    d <- getLine
+    -- Schedule Duration
+    putStrLn "Duração:"
+    dur <- getLine
+    -- Max Days
+    putStrLn "Prazo em dias de busca:"
+    max_days <- getLine
+    
+
+    overTheMonth <- verifyMonthDayAux (read m :: Int) ((read d :: Int)+(read max_days :: Int)) yearDaysOff
+
+    if not (overTheMonth) then do
+        putStrLn "Busca de intervalo ultrapassa um mês"
+        agenda yearDaysOff agendaData
+    else do
+        minInterval <- returnMaxIndex ((getTheMinimumIndex (allIntervals (selectMonthAndDays (read m :: Int) (read d :: Int) (read max_days :: Int) agendaData) yearDaysOff) (read dur :: Int)))
+        
+        -- putStrLn (show minInterval)
+
+        if (fst minInterval) == -1 then
+            agenda yearDaysOff agendaData
+        else do
+            previousSchedule <- return ((selectMonthAndDays (read m :: Int) (read d :: Int) (read max_days :: Int) agendaData) !! (fst minInterval))
+
+            putStrLn (show previousSchedule)
+
+            schedule <- getMinValid yearDaysOff agendaData (getM previousSchedule) (getD previousSchedule) (getIT previousSchedule) (read dur :: Int)
+            
+            insertScheduleAux yearDaysOff agendaData (getM schedule) (getD schedule) (getIT schedule) (getDU schedule)
 
 
 -- ############################ READING THE YEAR DAYS OFF ############################
