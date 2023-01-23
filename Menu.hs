@@ -1,11 +1,10 @@
 module Menu where
 
-leOp = do
-    putStrLn "Opcao:"
-    opcao <- getLine
-    return (read opcao :: Int)
+import ScheduleBT
+import ScheduleIO
 
-showMenu = do  
+menu :: ScheduleTree -> IO ()
+menu tree = do
     putStrLn "0 - Sair"
     putStrLn "1 - Recuperar agenda"
     putStrLn "2 - Verificar disponibilidade de horário"
@@ -16,3 +15,31 @@ showMenu = do
     putStrLn "7 - Cancelar compromisso"
     putStrLn "8 - Reagendar compromisso"
     putStrLn "9 - Gravar agenda"
+    putStrLn "Opcao: "
+    option <- getLine
+    case option of
+        "0" -> return ()
+
+        "3" -> do
+            schedule <- readSchedule
+            let newTree = insert schedule tree
+            putStrLn "Schedule added to the tree"
+            menu newTree
+
+        "7" -> do
+            newTree <- deleteSchedule tree
+            menu newTree
+
+        "8" -> do
+            newTree <- reschedule tree
+            menu newTree
+
+        "9" -> do
+            putStrLn "Schedule Tree:"
+            putStrLn (show tree)
+            menu tree
+        
+
+        _ -> do
+            putStrLn "Invalid option. Please try again."
+            menu tree
