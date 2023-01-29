@@ -19,11 +19,14 @@ menu tree = do
     option <- getLine
     case option of
         "0" -> return ()
+        
+        "2" -> do
+            checkAvailability tree
+            menu tree
 
         "3" -> do
             schedule <- readSchedule
             let newTree = insert schedule tree
-            putStrLn "Schedule added to the tree"
             menu newTree
 
         "7" -> do

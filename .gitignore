@@ -1,3 +1,4 @@
 *.ghci
 *.hi
 *.o
+main

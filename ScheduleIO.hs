@@ -12,7 +12,7 @@ readSchedule = do
     putStrLn "Enter initial time (hours): "
     hour <- readLn :: IO Int
     let time = hour
-    putStrLn "Enter duration (in minutes): "
+    putStrLn "Enter duration: "
     duration <- readLn :: IO Int
     putStrLn "Enter schedule type (Remote/OnPlace): "
     scheduleType <- getLine
@@ -63,4 +63,20 @@ reschedule tree = do
         Nothing -> return tree
     
     
-    
+checkAvailability :: ScheduleTree -> IO ()
+checkAvailability tree = do
+    putStrLn "Enter month: "
+    month <- readLn :: IO Int
+    putStrLn "Enter day: "
+    day <- readLn :: IO Int
+    putStrLn "Enter initial time (hours): "
+    hour <- readLn :: IO Int
+    let time = hour
+    putStrLn "Enter duration: "
+    duration <- readLn :: IO Int
+
+    let valid = verify (Schedule day month time duration Remote "") tree
+    if valid then
+        putStrLn "Valid Schedule"
+    else
+        putStrLn "Invalid Schedule"

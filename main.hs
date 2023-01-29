@@ -1,12 +1,13 @@
 import ScheduleBT
 import Schedule
 import Menu
+import Calendar
 
 
 main = do
     
-    -- yearDaysOff <- readYear
-    -- putStrLn (show yearDaysOff)
+    yearDaysOff <- readYear
+    putStrLn (show yearDaysOff)
 
     agendaData <- return emptyScheduleTree
     -- agendaDataValid <- initAgenda
