@@ -10,8 +10,8 @@ data Schedule = Schedule {day :: Int,
 data ScheduleType = Remote | OnPlace
 
 instance Show ScheduleType where
-    show Remote = "Remote"
-    show OnPlace = "OnPlace"
+    show Remote = "videoconferencia"
+    show OnPlace = "presencial"
 
 instance Eq Schedule where
     (==) schedule1 schedule2 = (day schedule1 == day schedule2) && (month schedule1 == month schedule2) && (initialTime schedule1 == initialTime schedule2)

@@ -1,15 +1,15 @@
 1
 5
 presencial
-8, 4
+8,4
 Sala13 do CT 13
 videoconferencia
-14, 7
+14,2
 Google Meet
 meet.google.com/svf-qkcy-tiy
 15
 presencial
-9, 2
+9,2
 Gabinete da Reitoria
 videoconferencia
 11,1
@@ -22,5 +22,5 @@ Secretaria do Departamento de Informatica
 2
 7
 presencial
-9, 3
+9,3
 Sala do Diretor do Centro de Artes
