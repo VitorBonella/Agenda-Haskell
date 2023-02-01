@@ -10,9 +10,8 @@ main = do
     yearDaysOff <- readYear
     --putStrLn (show yearDaysOff)
     
-    readCalendar
 
-    agendaData <- return emptyScheduleTree
+    agendaData <- readCalendar
     -- agendaDataValid <- initAgenda
     -- putStrLn (show agendaData)
     

@@ -27,7 +27,7 @@ checkConflict s1 s2 = (conflictTime s1 s2 || conflictTime s2 s1) && (day s1 == d
     where
         conflictTime schedule1 schedule2 =
             let endTime = (calculateEndTime (initialTime schedule1) (duration schedule1))
-            in initialTime schedule2 < endTime
+            in initialTime schedule2 < endTime && initialTime schedule2 > initialTime schedule2
 
 calculateEndTime :: Int -> Int -> Int
 calculateEndTime initialTime duration =

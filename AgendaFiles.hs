@@ -71,6 +71,7 @@ scheduleListToScheduleBt:: [Schedule] -> ScheduleTree -> ScheduleTree
 scheduleListToScheduleBt [] tree = tree 
 scheduleListToScheduleBt (x:xs) tree = scheduleListToScheduleBt xs (insert x tree)
 
+readCalendar:: IO(ScheduleTree)
 readCalendar = do
 
     b <- doesFileExist "agenda.txt"
@@ -85,10 +86,12 @@ readCalendar = do
         let scheduleList = stringListToScheduleList scheduleListStr
         -- putStrLn (show scheduleList)
         let bt = scheduleListToScheduleBt scheduleList emptyScheduleTree
-        putStrLn (show bt)
+
+        return bt
 
     else do
         writeFile "agenda.txt" ""
+        return emptyScheduleTree
 
 
 
