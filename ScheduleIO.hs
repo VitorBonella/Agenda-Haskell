@@ -89,3 +89,49 @@ checkAvailability yearDaysOff tree = do
         putStrLn "Valid Schedule"
     else
         putStrLn "Invalid Schedule"
+
+readInsertMinSchedule:: ([Char],[[Bool]]) -> ScheduleTree -> IO ScheduleTree
+readInsertMinSchedule yearDaysOff tree = do
+    putStrLn "Enter month: "
+    month <- readLn :: IO Int
+    putStrLn "Enter day: "
+    day <- readLn :: IO Int
+    putStrLn "Enter duration: "
+    duration <- readLn :: IO Int
+    putStrLn "Enter schedule type (Remote/OnPlace): "
+    scheduleType <- getLine
+    let sType = if scheduleType == "Remote" then Remote else OnPlace
+    
+    if scheduleType == "Remote" then do
+
+        putStrLn "Enter the meeting plataform: "
+        description <- getLine
+        putStrLn "Enter Link: "
+        link <- getLine
+
+        case (returnMinSchedule yearDaysOff tree (Schedule day month 8 duration sType (description++"\n"++link))) of
+            Just schedule -> do
+                putStrLn (show schedule)
+                return (insert yearDaysOff schedule tree)
+            Nothing -> do
+                putStrLn "acho nada"
+                return tree
+
+
+    else do
+
+        putStrLn "Enter description: "
+        description <- getLine
+
+        case (returnMinSchedule yearDaysOff tree (Schedule day month 8 duration sType description)) of
+            Just schedule -> do
+                putStrLn (show schedule)
+                return (insert yearDaysOff schedule tree)
+            Nothing -> do
+                putStrLn "acho nada"
+                return tree
+
+
+
+    
+

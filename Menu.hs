@@ -2,6 +2,7 @@ module Menu where
 
 import ScheduleBT
 import ScheduleIO
+import AgendaFiles
 
 menu :: ([Char],[[Bool]]) -> ScheduleTree -> IO ()
 menu yearDaysOff tree = do
@@ -19,7 +20,11 @@ menu yearDaysOff tree = do
     option <- getLine
     case option of
         "0" -> return ()
-        
+
+        "1" -> do
+            tree <- readCalendar yearDaysOff
+            menu yearDaysOff tree
+
         "2" -> do
             checkAvailability yearDaysOff tree
             menu yearDaysOff tree
@@ -27,6 +32,10 @@ menu yearDaysOff tree = do
         "3" -> do
             schedule <- readSchedule
             let newTree = insert yearDaysOff schedule tree
+            menu yearDaysOff newTree
+
+        "4" -> do
+            newTree <- readInsertMinSchedule yearDaysOff tree
             menu yearDaysOff newTree
 
         "7" -> do
@@ -39,10 +48,10 @@ menu yearDaysOff tree = do
 
         "9" -> do
             putStrLn "Schedule Tree:"
-            putStrLn (show tree)
+            -- putStrLn (show tree)
+            writeCalendar tree
             menu yearDaysOff tree
         
-
         _ -> do
             putStrLn "Invalid option. Please try again."
             menu yearDaysOff tree

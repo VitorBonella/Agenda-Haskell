@@ -9,27 +9,27 @@ emptyScheduleTree = Leaf
 
 -- ############################ Insert ############################
 
-insert :: ([Char],[[Bool]]) -> Schedule -> ScheduleTree -> ScheduleTree
+insert:: ([Char],[[Bool]]) -> Schedule -> ScheduleTree -> ScheduleTree
 insert yearDaysOff schedule Leaf = if isValid yearDaysOff schedule then Node schedule Leaf Leaf else Leaf
 insert yearDaysOff schedule (Node s left right)
     | schedule < s = if isValid yearDaysOff schedule && not (checkConflict schedule s) then Node s (insert yearDaysOff schedule left) right else Node s left right
     | schedule == s = Node s left right -- do not insert schedule if it is equal to an existing schedule
     | schedule > s = if isValid yearDaysOff schedule && not (checkConflict schedule s) then Node s left (insert yearDaysOff schedule right) else Node s left right
 
-isValid :: ([Char],[[Bool]]) -> Schedule -> Bool
+isValid:: ([Char],[[Bool]]) -> Schedule -> Bool
 isValid yearDaysOff schedule = validTime (initialTime schedule) (duration schedule) && (dayOff yearDaysOff (month schedule) (day schedule)) && (verifyMonthDay (month schedule) (day schedule) yearDaysOff)
 
-validTime :: Int -> Int -> Bool
-validTime h d = (h >= 8 && h < 12) || (h >= 14 && h < 18) || ((calculateEndTime h d) <= 18)
+validTime:: Int -> Int -> Bool
+validTime h d = ((h >= 8 && h < 12) || (h >= 14 && h < 18)) && ((calculateEndTime h d) <= 18)
 
-checkConflict :: Schedule -> Schedule -> Bool
-checkConflict s1 s2 = (conflictTime s1 s2 || conflictTime s2 s1) && (day s1 == day s2) && (month s1 == month s2)  
+checkConflict:: Schedule -> Schedule -> Bool
+checkConflict s1 s2 = ((conflictTime s1 s2 || conflictTime s2 s1) && (day s1 == day s2) && (month s1 == month s2))  
     where
         conflictTime schedule1 schedule2 =
             let endTime = (calculateEndTime (initialTime schedule1) (duration schedule1))
-            in initialTime schedule2 < endTime && initialTime schedule2 > initialTime schedule2
+            in initialTime schedule2 >= initialTime schedule1 && initialTime schedule2 < endTime
 
-calculateEndTime :: Int -> Int -> Int
+calculateEndTime:: Int -> Int -> Int
 calculateEndTime initialTime duration =
     if initialTime < 12 then
         if initialTime + duration > 12 then
@@ -64,14 +64,14 @@ verifyMonthDay m d yearDaysOff
 
 verify :: ([Char],[[Bool]]) -> Schedule -> ScheduleTree -> Bool
 verify yearDaysOff schedule Leaf = if isValid yearDaysOff schedule then True else False
-verify yearDaysOff schedule (Node s left right)
-    | schedule < s = if isValid yearDaysOff schedule && not (checkConflict schedule s) then verify yearDaysOff schedule left else False
-    | schedule == s = False
-    | schedule > s = if isValid yearDaysOff schedule && not (checkConflict schedule s) then verify yearDaysOff schedule right else False
+verify yearDaysOff schedule (Node s left right) =
+  if (checkConflict schedule s)
+    then False
+    else verify yearDaysOff schedule left && verify yearDaysOff schedule right
 
 -- ############################ Delete ############################
 
-delete :: Int -> Int -> Int -> ScheduleTree -> ScheduleTree
+delete:: Int -> Int -> Int -> ScheduleTree -> ScheduleTree
 delete day month time Leaf = Leaf
 delete day month time (Node (Schedule d m h dur t dsc) left right)
     | day == d && month == m && time == h = merge left right
@@ -89,7 +89,7 @@ delete day month time (Node (Schedule d m h dur t dsc) left right)
 
 instance Show ScheduleTree where
     show Leaf = ""
-    show (Node schedule left right) = (show schedule) ++ "\n" ++ (show left) ++ (show right)
+    show (Node schedule left right) = (show left) ++ (show schedule) ++  "\n" ++ (show right)
 
 -- ############################ Search ############################
 
@@ -99,3 +99,24 @@ searchSchedule (Node (Schedule d m h dur t dsc) left right) month day time
     | (month == m) && (day == d) && (time == h) = Just (Schedule d m h dur t dsc)
     | (month > m) || (month == m && day > d) || (month == m && day == d && time > h) = searchSchedule right month day time
     | otherwise = searchSchedule left month day time
+
+-- ############################ Insert Soon as Possible ############################
+
+
+returnMinSchedule:: ([Char],[[Bool]]) -> ScheduleTree -> Schedule -> Maybe Schedule
+returnMinSchedule yearDaysOff tree schedule@(Schedule 31 1 18 _ _ _) = returnMinSchedule yearDaysOff tree (addMonthReset schedule)
+returnMinSchedule yearDaysOff tree schedule@(Schedule 28 2 18 _ _ _) = returnMinSchedule yearDaysOff tree (addMonthReset schedule)
+returnMinSchedule yearDaysOff tree schedule@(Schedule 31 3 18 _ _ _) = returnMinSchedule yearDaysOff tree (addMonthReset schedule)
+returnMinSchedule yearDaysOff tree schedule@(Schedule 30 4 18 _ _ _) = returnMinSchedule yearDaysOff tree (addMonthReset schedule)
+returnMinSchedule yearDaysOff tree schedule@(Schedule 31 5 18 _ _ _) = returnMinSchedule yearDaysOff tree (addMonthReset schedule)
+returnMinSchedule yearDaysOff tree schedule@(Schedule 30 6 18 _ _ _) = returnMinSchedule yearDaysOff tree (addMonthReset schedule)
+returnMinSchedule yearDaysOff tree schedule@(Schedule 31 7 18 _ _ _) = returnMinSchedule yearDaysOff tree (addMonthReset schedule)
+returnMinSchedule yearDaysOff tree schedule@(Schedule 31 8 18 _ _ _) = returnMinSchedule yearDaysOff tree (addMonthReset schedule)
+returnMinSchedule yearDaysOff tree schedule@(Schedule 30 9 18 _ _ _) = returnMinSchedule yearDaysOff tree (addMonthReset schedule)
+returnMinSchedule yearDaysOff tree schedule@(Schedule 31 10 18 _ _ _) = returnMinSchedule yearDaysOff tree (addMonthReset schedule)
+returnMinSchedule yearDaysOff tree schedule@(Schedule 30 11 18 _ _ _) = returnMinSchedule yearDaysOff tree (addMonthReset schedule)
+returnMinSchedule yearDaysOff tree schedule@(Schedule 31 12 18 _ _ _) = Nothing
+returnMinSchedule yearDaysOff tree schedule@(Schedule _ _ 18 _ _ _) = returnMinSchedule yearDaysOff tree (addDayReset schedule) --novo dia
+returnMinSchedule yearDaysOff tree schedule
+    | verify yearDaysOff schedule tree = Just schedule
+    | otherwise = returnMinSchedule yearDaysOff tree (addAnHour schedule)
