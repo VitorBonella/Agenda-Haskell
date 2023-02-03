@@ -110,9 +110,9 @@ divedeInMonths scheduleList month = [divedeInDays (takeOnlyTheMonth scheduleList
 
 dayString day = (concat ([show dd ++"\n" | dd <- (init day)] ++ [show (last day)])) 
 
-makeAgendaStringMonth month m = [show m] ++ concat [[show i,dayString d]| (i,d) <- zip [1..] month, not (null d)] + ["\n"]
+makeAgendaStringMonth month m = [show m] ++ concat [[show i,dayString d]| (i,d) <- zip [1..] month, not (null d)] ++ [""]
 
-makeAgendaString scheduleList =  [makeAgendaStringMonth m i | (i,m) <- zip [1..] scheduleList]
+makeAgendaString scheduleList =  [makeAgendaStringMonth m i| (i,m) <- zip [1..] scheduleList]
 
 onlyMoreThanTwoElements dados = [d | d <- dados, (length d) > 2]
 
