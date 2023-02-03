@@ -9,21 +9,21 @@ emptyScheduleTree = Leaf
 
 -- ############################ Insert ############################
 
-insert :: Schedule -> ScheduleTree -> ScheduleTree
-insert schedule Leaf = if isValid schedule then Node schedule Leaf Leaf else Leaf
-insert schedule (Node s left right)
-    | schedule < s = if isValid schedule && not (checkConflict schedule s) then Node s (insert schedule left) right else Node s left right
+insert :: ([Char],[[Bool]]) -> Schedule -> ScheduleTree -> ScheduleTree
+insert yearDaysOff schedule Leaf = if isValid yearDaysOff schedule then Node schedule Leaf Leaf else Leaf
+insert yearDaysOff schedule (Node s left right)
+    | schedule < s = if isValid yearDaysOff schedule && not (checkConflict schedule s) then Node s (insert yearDaysOff schedule left) right else Node s left right
     | schedule == s = Node s left right -- do not insert schedule if it is equal to an existing schedule
-    | schedule > s = if isValid schedule && not (checkConflict schedule s) then Node s left (insert schedule right) else Node s left right
+    | schedule > s = if isValid yearDaysOff schedule && not (checkConflict schedule s) then Node s left (insert yearDaysOff schedule right) else Node s left right
 
-isValid :: Schedule -> Bool
-isValid schedule = validTime (initialTime schedule) (duration schedule)
+isValid :: ([Char],[[Bool]]) -> Schedule -> Bool
+isValid yearDaysOff schedule = validTime (initialTime schedule) (duration schedule) && (dayOff yearDaysOff (month schedule) (day schedule)) && (verifyMonthDay (month schedule) (day schedule) yearDaysOff)
 
 validTime :: Int -> Int -> Bool
 validTime h d = (h >= 8 && h < 12) || (h >= 14 && h < 18) || ((calculateEndTime h d) <= 18)
 
 checkConflict :: Schedule -> Schedule -> Bool
-checkConflict s1 s2 = (conflictTime s1 s2 || conflictTime s2 s1) && (day s1 == day s2) && (month s1 == month s2)
+checkConflict s1 s2 = (conflictTime s1 s2 || conflictTime s2 s1) && (day s1 == day s2) && (month s1 == month s2)  
     where
         conflictTime schedule1 schedule2 =
             let endTime = (calculateEndTime (initialTime schedule1) (duration schedule1))
@@ -39,14 +39,35 @@ calculateEndTime initialTime duration =
     else
         initialTime + duration
 
+
+dayOff yearDaysOff m d 
+    | m <=12 && d <= 31 = ((snd yearDaysOff) !! (m-1)) !! (d-1)
+    | otherwise = False
+
+verifyMonthDay m d yearDaysOff
+    | m == 1 && d <= 31 = True
+    | m == 2 && d <= 29 && ((fst yearDaysOff) == "True") = True
+    | m == 2 && d <= 28 = True
+    | m == 3 && d <= 31 = True
+    | m == 4 && d <= 30 = True
+    | m == 5 && d <= 31 = True
+    | m == 6 && d <= 30 = True
+    | m == 7 && d <= 31 = True
+    | m == 8 && d <= 31 = True
+    | m == 9 && d <= 30 = True
+    | m == 10 && d <= 31 = True
+    | m == 11 && d <= 30 = True
+    | m == 12 && d <= 31 = True
+    | otherwise = False
+
 -- ############################ Verify ############################
 
-verify :: Schedule -> ScheduleTree -> Bool
-verify schedule Leaf = if isValid schedule then True else False
-verify schedule (Node s left right)
-    | schedule < s = if isValid schedule && not (checkConflict schedule s) then verify schedule left else False
-    | schedule == s = False -- do not insert schedule if it is equal to an existing schedule
-    | schedule > s = if isValid schedule && not (checkConflict schedule s) then verify schedule right else False
+verify :: ([Char],[[Bool]]) -> Schedule -> ScheduleTree -> Bool
+verify yearDaysOff schedule Leaf = if isValid yearDaysOff schedule then True else False
+verify yearDaysOff schedule (Node s left right)
+    | schedule < s = if isValid yearDaysOff schedule && not (checkConflict schedule s) then verify yearDaysOff schedule left else False
+    | schedule == s = False
+    | schedule > s = if isValid yearDaysOff schedule && not (checkConflict schedule s) then verify yearDaysOff schedule right else False
 
 -- ############################ Delete ############################
 

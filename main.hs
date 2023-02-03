@@ -4,15 +4,13 @@ import Menu
 import Calendar
 import AgendaFiles
 
-
 main = do
     
-    yearDaysOff <- readYear
+    yearDaysOff <- readYear -- ([Char],[[Bool]])
     --putStrLn (show yearDaysOff)
-    
 
-    agendaData <- readCalendar
+    agendaData <- readCalendar yearDaysOff
     -- agendaDataValid <- initAgenda
     -- putStrLn (show agendaData)
     
-    menu agendaData
+    menu yearDaysOff agendaData 

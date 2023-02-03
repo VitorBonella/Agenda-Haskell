@@ -17,9 +17,18 @@ readSchedule = do
     putStrLn "Enter schedule type (Remote/OnPlace): "
     scheduleType <- getLine
     let sType = if scheduleType == "Remote" then Remote else OnPlace
-    putStrLn "Enter description: "
-    description <- getLine
-    return (Schedule day month time duration sType description)
+
+    if scheduleType == "Remote" then do
+        putStrLn "Enter the meeting plataform: "
+        description <- getLine
+        putStrLn "Enter Link: "
+        link <- getLine
+        return (Schedule day month time duration sType (description++"\n"++link))
+    else do
+        putStrLn "Enter description: "
+        description <- getLine
+        return (Schedule day month time duration sType description)
+    
 
 deleteSchedule :: ScheduleTree -> IO ScheduleTree
 deleteSchedule tree = do
@@ -34,8 +43,8 @@ deleteSchedule tree = do
 
     return newTree
 
-reschedule :: ScheduleTree -> IO ScheduleTree
-reschedule tree = do
+reschedule :: ([Char],[[Bool]]) -> ScheduleTree -> IO ScheduleTree
+reschedule yearDaysOff tree = do
     putStrLn "Enter the day of the schedule you want to reschedule: "
     day <- readLn :: IO Int
     putStrLn "Enter the month of the schedule you want to reschedule: "
@@ -58,13 +67,13 @@ reschedule tree = do
             -- update or delete the schedule
             let newSchedule = Schedule newDay newMonth newTime newDuration (scheduleType schedule) (description schedule)
             let treeWithoutOldSchedule = delete day month time tree
-            let newTree = insert newSchedule treeWithoutOldSchedule
+            let newTree = insert yearDaysOff newSchedule treeWithoutOldSchedule
             return newTree
         Nothing -> return tree
     
     
-checkAvailability :: ScheduleTree -> IO ()
-checkAvailability tree = do
+checkAvailability :: ([Char],[[Bool]]) -> ScheduleTree -> IO ()
+checkAvailability yearDaysOff tree = do
     putStrLn "Enter month: "
     month <- readLn :: IO Int
     putStrLn "Enter day: "
@@ -75,7 +84,7 @@ checkAvailability tree = do
     putStrLn "Enter duration: "
     duration <- readLn :: IO Int
 
-    let valid = verify (Schedule day month time duration Remote "") tree
+    let valid = verify yearDaysOff (Schedule day month time duration Remote "") tree
     if valid then
         putStrLn "Valid Schedule"
     else

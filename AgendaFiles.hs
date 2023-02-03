@@ -67,12 +67,12 @@ stringToSchedule strs = Schedule day month time duration sType description
 stringListToScheduleList:: [[String]] -> [Schedule]
 stringListToScheduleList strings = [stringToSchedule strs | strs <- strings, length(strs) > 0]
 
-scheduleListToScheduleBt:: [Schedule] -> ScheduleTree -> ScheduleTree
-scheduleListToScheduleBt [] tree = tree 
-scheduleListToScheduleBt (x:xs) tree = scheduleListToScheduleBt xs (insert x tree)
+scheduleListToScheduleBt:: ([Char],[[Bool]]) -> [Schedule] -> ScheduleTree -> ScheduleTree
+scheduleListToScheduleBt yearDaysOff [] tree = tree 
+scheduleListToScheduleBt yearDaysOff (x:xs) tree = scheduleListToScheduleBt yearDaysOff xs (insert yearDaysOff x tree)
 
-readCalendar:: IO(ScheduleTree)
-readCalendar = do
+readCalendar:: ([Char],[[Bool]]) -> IO(ScheduleTree)
+readCalendar yearDaysOff = do
 
     b <- doesFileExist "agenda.txt"
 
@@ -85,7 +85,7 @@ readCalendar = do
         putStrLn (show scheduleListStr)
         let scheduleList = stringListToScheduleList scheduleListStr
         -- putStrLn (show scheduleList)
-        let bt = scheduleListToScheduleBt scheduleList emptyScheduleTree
+        let bt = scheduleListToScheduleBt yearDaysOff scheduleList emptyScheduleTree
 
         return bt
 
@@ -108,8 +108,7 @@ takeOnlyTheMonth agendaData month = [x | x <- agendaData, (getM x) == month]
 divedeInMonths agendaData 13 = []
 divedeInMonths agendaData month = [divedeInDays (takeOnlyTheMonth agendaData month) 1] ++ (divedeInMonths agendaData (month+1))
 
-
-dayString day= (show [(it,du) | (_,_,it,du) <- day])
+dayString day = (show [(it,du) | (_,_,it,du) <- day])
 
 makeAgendaStringMonth month m = [show m] ++ concat [[show i,dayString d]| (i,d) <- zip [1..] month, not (null d)] ++ ["\n"]
 
