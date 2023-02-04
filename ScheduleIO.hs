@@ -2,6 +2,21 @@ module ScheduleIO where
 
 import Schedule
 import ScheduleBT
+import Control.Monad
+
+readBasedOnType:: String -> IO String
+readBasedOnType sType = do
+    if (sType == "videoconferencia") then do
+        putStrLn "Enter the meeting plataform: "
+        description <- getLine
+        putStrLn "Enter Link: "
+        link <- getLine
+        return (description++"\n"++link)
+        --return (Schedule day month time duration sType (description++"\n"++link))
+    else do
+        putStrLn "Enter description: "
+        description <- getLine
+        return description
 
 readSchedule :: IO Schedule
 readSchedule = do
@@ -14,20 +29,12 @@ readSchedule = do
     let time = hour
     putStrLn "Enter duration: "
     duration <- readLn :: IO Int
-    putStrLn "Enter schedule type (Remote/OnPlace): "
+    putStrLn "Enter schedule type (videoconferencia/presencial): "
     scheduleType <- getLine
-    let sType = if scheduleType == "Remote" then Remote else OnPlace
+    let sType = if scheduleType == "videoconferencia" then Remote else OnPlace
+    descriptionF <- readBasedOnType scheduleType
 
-    if scheduleType == "Remote" then do
-        putStrLn "Enter the meeting plataform: "
-        description <- getLine
-        putStrLn "Enter Link: "
-        link <- getLine
-        return (Schedule day month time duration sType (description++"\n"++link))
-    else do
-        putStrLn "Enter description: "
-        description <- getLine
-        return (Schedule day month time duration sType description)
+    return (Schedule day month time duration sType descriptionF)
     
 
 deleteSchedule :: ScheduleTree -> IO ScheduleTree
@@ -93,45 +100,110 @@ checkAvailability yearDaysOff tree = do
 readInsertMinSchedule:: ([Char],[[Bool]]) -> ScheduleTree -> IO ScheduleTree
 readInsertMinSchedule yearDaysOff tree = do
     putStrLn "Enter month: "
-    month <- readLn :: IO Int
+    monthh <- readLn :: IO Int
     putStrLn "Enter day: "
-    day <- readLn :: IO Int
+    dayy <- readLn :: IO Int
     putStrLn "Enter duration: "
     duration <- readLn :: IO Int
-    putStrLn "Enter schedule type (Remote/OnPlace): "
+    putStrLn "Enter schedule type (videoconferencia/presencial): "
     scheduleType <- getLine
-    let sType = if scheduleType == "Remote" then Remote else OnPlace
+    let sType = if scheduleType == "videoconferencia" then Remote else OnPlace
+    descriptionF <- readBasedOnType scheduleType
+
+    case (returnMinSchedule yearDaysOff tree (Schedule dayy monthh 8 duration sType descriptionF)) of
+        Just schedule -> do
+            putStrLn ("\n" ++ "Sucess Scheduled: " ++ (show (day schedule)) ++ "/" ++ (show (month schedule)) ++ "\n" ++(show schedule) ++ "\n")
+            return (insert yearDaysOff schedule tree)
+        Nothing -> do
+            putStrLn "Not Sucessful"
+            return tree
+   
+
+
+readInsertMinIntervalSchedule:: ([Char],[[Bool]]) -> ScheduleTree -> IO ScheduleTree
+readInsertMinIntervalSchedule yearDaysOff tree = do
     
-    if scheduleType == "Remote" then do
+    putStrLn "Enter month: "
+    monthh <- readLn :: IO Int
+    putStrLn "Enter day: "
+    dayy <- readLn :: IO Int
+    putStrLn "Enter duration: "
+    duration <- readLn :: IO Int
+    putStrLn "Enter schedule type (videoconferencia/presencial): "
+    scheduleType <- getLine
+    let sType = if scheduleType == "videoconferencia" then Remote else OnPlace
+    descriptionF <- readBasedOnType scheduleType
+    putStrLn "Deadline in days:"
+    max_days <- readLn :: IO Int
 
-        putStrLn "Enter the meeting plataform: "
-        description <- getLine
-        putStrLn "Enter Link: "
-        link <- getLine
+    overTheMonth <- verifyMonthDayAux  yearDaysOff monthh (dayy+max_days)
+    let schedule_list =  scheduleBtToScheduleList tree
 
-        case (returnMinSchedule yearDaysOff tree (Schedule day month 8 duration sType (description++"\n"++link))) of
-            Just schedule -> do
-                putStrLn (show schedule)
-                return (insert yearDaysOff schedule tree)
-            Nothing -> do
-                putStrLn "acho nada"
-                return tree
-
-
+    if not (overTheMonth) then do
+        putStrLn "Busca de intervalo ultrapassa um mês"
+        return tree
     else do
+        let selected_days = (selectMonthAndDays monthh dayy max_days schedule_list)
+        let minInterval = returnMinIndex ((getTheMinimumIndex (allIntervals yearDaysOff selected_days) duration))
+        
+        case minInterval of
+            Just interval -> do
+                let previousSchedule = (selected_days !! (fst interval))
 
-        putStrLn "Enter description: "
-        description <- getLine
-
-        case (returnMinSchedule yearDaysOff tree (Schedule day month 8 duration sType description)) of
-            Just schedule -> do
-                putStrLn (show schedule)
-                return (insert yearDaysOff schedule tree)
+                let schedule = returnMinSchedule yearDaysOff tree (changeScheduleTypeAndDescAndDur previousSchedule sType descriptionF duration)
+            
+                case schedule of
+                    Just schedule -> do
+                        putStrLn ("\n" ++ "Sucess Scheduled: " ++ (show (day schedule)) ++ "/" ++ (show (month schedule)) ++ "\n" ++(show schedule) ++ "\n")
+                        return (insert yearDaysOff schedule tree)
+                    Nothing -> do
+                        putStrLn "Not Sucessful"
+                        return tree
             Nothing -> do
-                putStrLn "acho nada"
                 return tree
-
-
+            
 
     
+
+readInsertMaxIntervalSchedule:: ([Char],[[Bool]]) -> ScheduleTree -> IO ScheduleTree
+readInsertMaxIntervalSchedule yearDaysOff tree = do
+    
+    putStrLn "Enter month: "
+    monthh <- readLn :: IO Int
+    putStrLn "Enter day: "
+    dayy <- readLn :: IO Int
+    putStrLn "Enter duration: "
+    duration <- readLn :: IO Int
+    putStrLn "Enter schedule type (videoconferencia/presencial): "
+    scheduleType <- getLine
+    let sType = if scheduleType == "videoconferencia" then Remote else OnPlace
+    descriptionF <- readBasedOnType scheduleType
+    putStrLn "Deadline in days:"
+    max_days <- readLn :: IO Int
+
+    overTheMonth <- verifyMonthDayAux  yearDaysOff monthh (dayy+max_days)
+    let schedule_list =  scheduleBtToScheduleList tree
+
+    if not (overTheMonth) then do
+        putStrLn "Busca de intervalo ultrapassa um mês"
+        return tree
+    else do
+        let selected_days = (selectMonthAndDays monthh dayy max_days schedule_list)
+        let minInterval = returnMaxIndex ((getTheMinimumIndex (allIntervals yearDaysOff selected_days) duration))
+        
+        case minInterval of
+            Just interval -> do
+                let previousSchedule = (selected_days !! (fst interval))
+
+                let schedule = returnMinSchedule yearDaysOff tree (changeScheduleTypeAndDescAndDur previousSchedule sType descriptionF duration)
+            
+                case schedule of
+                    Just schedule -> do
+                        putStrLn ("\n" ++ "Sucess Scheduled: " ++ (show (day schedule)) ++ "/" ++ (show (month schedule)) ++ "\n" ++(show schedule) ++ "\n")
+                        return (insert yearDaysOff schedule tree)
+                    Nothing -> do
+                        putStrLn "Not Sucessful"
+                        return tree
+            Nothing -> do
+                return tree
 

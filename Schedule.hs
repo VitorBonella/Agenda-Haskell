@@ -30,3 +30,6 @@ addAnHour s = (Schedule (day s) (month s) ((initialTime s)+1) (duration s) (sche
 
 addMonthReset:: Schedule -> Schedule
 addMonthReset s = (Schedule 1 ((month s)+1) 8 (duration s) (scheduleType s) (description s))
+
+changeScheduleTypeAndDescAndDur:: Schedule -> ScheduleType -> String -> Int -> Schedule
+changeScheduleTypeAndDescAndDur s nT nDesc nDur = (Schedule (day s) (month s) (initialTime s) nDur nT nDesc)

@@ -3,6 +3,7 @@ module AgendaFiles where
 import ScheduleBT
 import System.Directory
 import Schedule
+
 -- ############################ READING THE YEAR ############################
 
 getRest:: [String] -> String -> [String]
@@ -82,7 +83,7 @@ readCalendar yearDaysOff = do
         let months = readMonths (lines content)
         -- putStrLn (show months)
         let scheduleListStr = readDays months
-        putStrLn (show scheduleListStr)
+        -- putStrLn (show scheduleListStr)
         let scheduleList = stringListToScheduleList scheduleListStr
         -- putStrLn (show scheduleList)
         let bt = scheduleListToScheduleBt yearDaysOff scheduleList emptyScheduleTree
@@ -95,30 +96,33 @@ readCalendar yearDaysOff = do
 
 
 
-
 -- ############################ WRITE AGENDA ############################
 
+takeOnlyTheDay:: [Schedule] -> Int -> [Schedule]
 takeOnlyTheDay monthList dayy = [x | x <- monthList, (day x) == dayy]
 
+divedeInDays:: [Schedule] -> Int -> [[Schedule]]
 divedeInDays monthList 32 = []
 divedeInDays monthList day = [takeOnlyTheDay monthList day] ++ (divedeInDays monthList (day+1))
 
+takeOnlyTheMonth:: [Schedule] -> Int -> [Schedule]
 takeOnlyTheMonth scheduleList monthh = [x | x <- scheduleList, (month x) == monthh]
 
+divedeInMonths:: [Schedule] -> Int -> [[[Schedule]]]
 divedeInMonths scheduleList 13 = []
 divedeInMonths scheduleList month = [divedeInDays (takeOnlyTheMonth scheduleList month) 1] ++ (divedeInMonths scheduleList (month+1))
 
+dayString:: [Schedule] -> String
 dayString day = (concat ([show dd ++"\n" | dd <- (init day)] ++ [show (last day)])) 
 
+makeAgendaStringMonth:: [[Schedule]] -> Int -> [String]
 makeAgendaStringMonth month m = [show m] ++ concat [[show i,dayString d]| (i,d) <- zip [1..] month, not (null d)] ++ [""]
 
+makeAgendaString:: [[[Schedule]]] -> [[String]]
 makeAgendaString scheduleList =  [makeAgendaStringMonth m i| (i,m) <- zip [1..] scheduleList]
 
-onlyMoreThanTwoElements dados = [d | d <- dados, (length d) > 2]
-
-scheduleBtToScheduleList:: ScheduleTree -> [Schedule] 
-scheduleBtToScheduleList Leaf = []
-scheduleBtToScheduleList (Node schedule left right) = scheduleBtToScheduleList left ++ [schedule] ++ scheduleBtToScheduleList right
+onlyMoreThanTwoElements:: [[String]] -> [[String]]
+onlyMoreThanTwoElements dados = [d | d <- dados, (length d) > 3]
 
 writeCalendar:: ScheduleTree -> IO()
 writeCalendar tree = do
@@ -127,6 +131,5 @@ writeCalendar tree = do
     let sch_list = scheduleBtToScheduleList tree
     -- putStrLn (show ((makeAgendaString (divedeInMonths sch_list 1))))
 
-    writeFile "agendaTeste.txt" $ unlines (concat (onlyMoreThanTwoElements (makeAgendaString (divedeInMonths sch_list 1))))
-    
+    writeFile "agenda.txt" $ unlines (concat (onlyMoreThanTwoElements (makeAgendaString (divedeInMonths sch_list 1))))
 

@@ -1,6 +1,8 @@
 module ScheduleBT where
 
 import Schedule
+import Data.List(minimumBy,maximumBy)
+import Data.Ord(comparing)
 
 data ScheduleTree = Leaf | Node Schedule ScheduleTree ScheduleTree
 
@@ -39,11 +41,12 @@ calculateEndTime initialTime duration =
     else
         initialTime + duration
 
-
+dayOff:: ([Char],[[Bool]]) -> Int -> Int -> Bool
 dayOff yearDaysOff m d 
     | m <=12 && d <= 31 = ((snd yearDaysOff) !! (m-1)) !! (d-1)
     | otherwise = False
 
+verifyMonthDay:: Int -> Int -> ([Char],[[Bool]]) -> Bool
 verifyMonthDay m d yearDaysOff
     | m == 1 && d <= 31 = True
     | m == 2 && d <= 29 && ((fst yearDaysOff) == "True") = True
@@ -100,8 +103,13 @@ searchSchedule (Node (Schedule d m h dur t dsc) left right) month day time
     | (month > m) || (month == m && day > d) || (month == m && day == d && time > h) = searchSchedule right month day time
     | otherwise = searchSchedule left month day time
 
--- ############################ Insert Soon as Possible ############################
+-- ############################ In order conversion ############################
 
+scheduleBtToScheduleList:: ScheduleTree -> [Schedule] 
+scheduleBtToScheduleList Leaf = []
+scheduleBtToScheduleList (Node schedule left right) = scheduleBtToScheduleList left ++ [schedule] ++ scheduleBtToScheduleList right
+
+-- ############################ Insert Soon as Possible ############################
 
 returnMinSchedule:: ([Char],[[Bool]]) -> ScheduleTree -> Schedule -> Maybe Schedule
 returnMinSchedule yearDaysOff tree schedule@(Schedule 31 1 18 _ _ _) = returnMinSchedule yearDaysOff tree (addMonthReset schedule)
@@ -120,3 +128,49 @@ returnMinSchedule yearDaysOff tree schedule@(Schedule _ _ 18 _ _ _) = returnMinS
 returnMinSchedule yearDaysOff tree schedule
     | verify yearDaysOff schedule tree = Just schedule
     | otherwise = returnMinSchedule yearDaysOff tree (addAnHour schedule)
+
+-- ############################ Min Interval ############################
+
+hourDistance:: Int -> Int -> Int -> Int -> Int
+hourDistance it1 du1 it2 du2
+    | it2 > 12 && it1 < 12 = it2 - (it1+du1) - 2
+    | it1 > 12 && it2 < 12 = (18 - (it1+du1)) + (it2 - 8)
+    | otherwise = it2 - (it1+du1)
+
+daysDistance:: ([Char],[[Bool]]) -> Int -> Int -> Int -> Int
+daysDistance yearDaysOff m d1 d2 = (length [x | x <- [d1+1..d2],(dayOff yearDaysOff m x)]) * 8
+
+distanceBetweenSchedule:: ([Char],[[Bool]]) -> Schedule -> Schedule -> Int -> Int
+distanceBetweenSchedule yearDaysOff schedule1 schedule2 dist
+    | (month schedule1) == (month schedule2) && (day schedule1) == (day schedule2) = (dist + (hourDistance (initialTime schedule1) (duration schedule1) (initialTime schedule2) (duration schedule2)))
+    | (month schedule1) == (month schedule2) = (dist + (hourDistance (initialTime schedule1) (duration schedule1)  (initialTime schedule2) (duration schedule2)) + (daysDistance yearDaysOff (month schedule1) (day schedule1) (day schedule2)))
+    | otherwise = dist
+
+pairs:: [a] -> [(a,a)]
+pairs [] = []
+pairs (x:[]) = []
+pairs (x:y:zs) = (x, y) : pairs (y : zs)
+
+allIntervals:: ([Char],[[Bool]]) -> [Schedule] -> [Int]
+allIntervals yearDaysOff scheduleList = [distanceBetweenSchedule yearDaysOff s1 s2 0 | (s1,s2) <- (pairs scheduleList)]
+
+verifyMonthDayAux:: ([Char],[[Bool]]) -> Int -> Int -> IO Bool
+verifyMonthDayAux yearDaysOff m d  = return (verifyMonthDay m d yearDaysOff)
+
+selectMonthAndDays:: Int -> Int -> Int -> [Schedule] -> [Schedule]
+selectMonthAndDays m d max_days scheduleList = [x | x <- scheduleList, (month x) == m && (day x) <= d+max_days]
+
+getTheMinimumIndex [] dur = []
+getTheMinimumIndex xs dur = ([(i,d) | (i,d) <- zip [0..] xs, d >= dur])
+
+returnMinIndex:: [(Int,Int)] -> Maybe (Int,Int)
+returnMinIndex xs
+    | (null xs) = Nothing
+    | otherwise = Just (minimumBy (comparing snd) xs)
+
+returnMaxIndex:: [(Int,Int)] -> Maybe (Int,Int)
+returnMaxIndex xs
+    | (null xs) = Nothing
+    | otherwise = Just (maximumBy (comparing snd) xs)
+
+-- ############################ Max Interval ############################

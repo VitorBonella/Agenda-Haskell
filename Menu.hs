@@ -38,6 +38,14 @@ menu yearDaysOff tree = do
             newTree <- readInsertMinSchedule yearDaysOff tree
             menu yearDaysOff newTree
 
+        "5" -> do
+            newTree <- readInsertMinIntervalSchedule yearDaysOff tree
+            menu yearDaysOff newTree
+
+        "6" -> do
+            newTree <- readInsertMaxIntervalSchedule yearDaysOff tree
+            menu yearDaysOff newTree
+
         "7" -> do
             newTree <- deleteSchedule tree
             menu yearDaysOff newTree

@@ -283,7 +283,6 @@ selectMonthAndDays m d max_days agendaData = [x | x <- agendaData, (getM x) == m
 getTheMinimumIndex [] dur = []
 getTheMinimumIndex xs dur = ([(i,d) | (i,d) <- zip [0..] xs, d >= dur])
 
-
 returnMinIndex xs
     | (null xs) = return (-1,-1)
     | otherwise = return (minimumBy (comparing snd) xs)
