@@ -20,10 +20,10 @@ readBasedOnType sType = do
 
 readSchedule :: IO Schedule
 readSchedule = do
-    putStrLn "Enter month: "
-    month <- readLn :: IO Int
     putStrLn "Enter day: "
     day <- readLn :: IO Int
+    putStrLn "Enter month: "
+    month <- readLn :: IO Int
     putStrLn "Enter initial time (hours): "
     hour <- readLn :: IO Int
     let time = hour
@@ -39,10 +39,10 @@ readSchedule = do
 
 deleteSchedule :: ScheduleTree -> IO ScheduleTree
 deleteSchedule tree = do
-    putStrLn "Enter month: "
-    month <- readLn :: IO Int
     putStrLn "Enter day: "
     day <- readLn :: IO Int
+    putStrLn "Enter month: "
+    month <- readLn :: IO Int
     putStrLn "Enter initial time (hours): "
     hour <- readLn :: IO Int
     let time = hour
@@ -81,10 +81,10 @@ reschedule yearDaysOff tree = do
     
 checkAvailability :: ([Char],[[Bool]]) -> ScheduleTree -> IO ()
 checkAvailability yearDaysOff tree = do
-    putStrLn "Enter month: "
-    month <- readLn :: IO Int
     putStrLn "Enter day: "
     day <- readLn :: IO Int
+    putStrLn "Enter month: "
+    month <- readLn :: IO Int
     putStrLn "Enter initial time (hours): "
     hour <- readLn :: IO Int
     let time = hour
@@ -99,10 +99,10 @@ checkAvailability yearDaysOff tree = do
 
 readInsertMinSchedule:: ([Char],[[Bool]]) -> ScheduleTree -> IO ScheduleTree
 readInsertMinSchedule yearDaysOff tree = do
-    putStrLn "Enter month: "
-    monthh <- readLn :: IO Int
     putStrLn "Enter day: "
     dayy <- readLn :: IO Int
+    putStrLn "Enter month: "
+    monthh <- readLn :: IO Int
     putStrLn "Enter duration: "
     duration <- readLn :: IO Int
     putStrLn "Enter schedule type (videoconferencia/presencial): "
@@ -123,10 +123,10 @@ readInsertMinSchedule yearDaysOff tree = do
 readInsertMinIntervalSchedule:: ([Char],[[Bool]]) -> ScheduleTree -> IO ScheduleTree
 readInsertMinIntervalSchedule yearDaysOff tree = do
     
-    putStrLn "Enter month: "
-    monthh <- readLn :: IO Int
     putStrLn "Enter day: "
     dayy <- readLn :: IO Int
+    putStrLn "Enter month: "
+    monthh <- readLn :: IO Int
     putStrLn "Enter duration: "
     duration <- readLn :: IO Int
     putStrLn "Enter schedule type (videoconferencia/presencial): "
@@ -160,6 +160,7 @@ readInsertMinIntervalSchedule yearDaysOff tree = do
                         putStrLn "Not Sucessful"
                         return tree
             Nothing -> do
+                putStrLn "No Min Interval"
                 return tree
             
 
@@ -167,11 +168,10 @@ readInsertMinIntervalSchedule yearDaysOff tree = do
 
 readInsertMaxIntervalSchedule:: ([Char],[[Bool]]) -> ScheduleTree -> IO ScheduleTree
 readInsertMaxIntervalSchedule yearDaysOff tree = do
-    
-    putStrLn "Enter month: "
-    monthh <- readLn :: IO Int
     putStrLn "Enter day: "
     dayy <- readLn :: IO Int
+    putStrLn "Enter month: "
+    monthh <- readLn :: IO Int
     putStrLn "Enter duration: "
     duration <- readLn :: IO Int
     putStrLn "Enter schedule type (videoconferencia/presencial): "
@@ -189,9 +189,9 @@ readInsertMaxIntervalSchedule yearDaysOff tree = do
         return tree
     else do
         let selected_days = (selectMonthAndDays monthh dayy max_days schedule_list)
-        let minInterval = returnMaxIndex ((getTheMinimumIndex (allIntervals yearDaysOff selected_days) duration))
+        let maxInterval = returnMaxIndex ((getTheMinimumIndex (allIntervals yearDaysOff selected_days) duration))
         
-        case minInterval of
+        case maxInterval of
             Just interval -> do
                 let previousSchedule = (selected_days !! (fst interval))
 
@@ -205,5 +205,6 @@ readInsertMaxIntervalSchedule yearDaysOff tree = do
                         putStrLn "Not Sucessful"
                         return tree
             Nothing -> do
+                putStrLn "No Max Interval"
                 return tree
 

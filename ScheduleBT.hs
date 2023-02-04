@@ -168,9 +168,9 @@ returnMinIndex xs
     | (null xs) = Nothing
     | otherwise = Just (minimumBy (comparing snd) xs)
 
+-- ############################ Max Interval ############################
+
 returnMaxIndex:: [(Int,Int)] -> Maybe (Int,Int)
 returnMaxIndex xs
     | (null xs) = Nothing
     | otherwise = Just (maximumBy (comparing snd) xs)
-
--- ############################ Max Interval ############################

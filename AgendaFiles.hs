@@ -79,7 +79,9 @@ readCalendar yearDaysOff = do
 
     if b then do
         content <- readFile "agenda.txt"
-        
+        let aux_no_busy = length(content)
+        putStrLn (show aux_no_busy) --ajuda a "fechar o arquivo"
+
         let months = readMonths (lines content)
         -- putStrLn (show months)
         let scheduleListStr = readDays months

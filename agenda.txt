@@ -9,12 +9,19 @@ Google Meet
 meet.google.com/svf-qkcy-tiy
 15
 presencial
+8,1
+Cafe
+presencial
 9,2
 Gabinete da Reitoria
 videoconferencia
 11,1
 Google Meet
 meet.google.com/fpg-saxz-hcm
+videoconferencia
+14,3
+Zoom
+zoom.com/sfaf-14124
 presencial
 17,1
 Secretaria do Departamento de Informatica
@@ -24,3 +31,39 @@ Secretaria do Departamento de Informatica
 presencial
 9,3
 Sala do Diretor do Centro de Artes
+
+4
+30
+presencial
+8,5
+Texto
+videoconferencia
+15,3
+meet
+meet.gocm
+
+7
+4
+videoconferencia
+8,8
+Artigos online
+inlis.saf
+
+8
+2
+presencial
+9,2
+Sala
+
+9
+25
+presencial
+11,3
+almoço
+
+12
+12
+presencial
+10,6
+Jogos
+
